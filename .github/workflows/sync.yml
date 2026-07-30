@@ -29,6 +29,10 @@ jobs:
           ref: data
           path: data-branch
 
+      - uses: actions/checkout@v4
+        with:
+          path: local
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -42,6 +46,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
+          WATCHLIST_FILE: local/watchlist.enc.json
         run: python -m scripts.run >/dev/null 2>&1
 
       - name: Publish
