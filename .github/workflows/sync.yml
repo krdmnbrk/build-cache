@@ -47,9 +47,20 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
           WATCHLIST_FILE: local/watchlist.enc.json
-        run: python -m scripts.run >/dev/null 2>&1
+        # Output is redacted at the source (scripts/run.py::configure_redaction),
+        # so it is safe to show here — and a failed run is debuggable.
+        # Exit 1 means one source failed and the rest is still worth publishing;
+        # only a hard failure (2) skips the publish step.
+        run: |
+          set +e
+          python -m scripts.run
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ $code -le 1 ]
+        id: refresh
 
       - name: Publish
+        if: steps.refresh.outputs.code == '0' || steps.refresh.outputs.code == '1'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -62,3 +73,9 @@ jobs:
           git add -A
           git commit -qm "sync $(date -u +%s)"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+
+      - name: Report
+        if: steps.refresh.outputs.code != '0'
+        run: |
+          echo "refresh exited ${{ steps.refresh.outputs.code }}"
+          exit 1
