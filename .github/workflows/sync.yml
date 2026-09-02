@@ -2,7 +2,9 @@ name: Sync
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # Off the :00/:30 marks: GitHub queues crowded slots for hours, and this
+    # one was firing every 2-5 hours instead of every 30 minutes.
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 concurrency:
